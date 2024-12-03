@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "[%(asctime)s| %(levelname)s] %(name)s|\"%(message)s\"",
+      "datefmt": "%Y-%m-%d %H:%M:%S%z"
+    },
+    "detailed": {
+      "format": "[%(asctime)s| %(levelname)s] (%(process)s)|(%(processName)s)|%(name)s|\"%(message)s\"",
+      "datefmt": "%Y-%m-%d %H:%M:%S%z"
+    },
+    "json":{
+      "()": "migration_tool.logger.utils.JSONFormatter",
+      "fmt_keys": {
+        "timestamp": "timestamp",
+        "level": "levelname",
+        "process": "process",
+        "processName": "processName",
+        "name": "name",
+        "message": "message"
+      }
+    }
+  },
+  "handlers": {
+    "stdout": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "stream": "ext://sys.stdout"
+    }
+  },
+  "loggers": {
+    "root": {
+      "level": "DEBUG",
+      "handlers": [
+        "stdout"
+      ]
+    }
+  }
+}
