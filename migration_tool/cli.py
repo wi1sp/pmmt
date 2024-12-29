@@ -6,13 +6,15 @@ import time
 import argparse
 from typing import Optional
 
+from migration_tool.config_parser.parser import MigrationsConfigParser
+from migration_tool.db_migration.base import DBMigrationRunner
 from migration_tool.db_migration.postgresql import PostgreSQLMigrationRunner
 from migration_tool.logger.mix_in import LoggerMixIn
 from migration_tool.logger.utils import init_logger
 from migration_tool.migration_config import MigrationConfig
 from migration_tool.migration_files.loader.git_hub import FromGitHubRepoMigrationFilesLoader, \
     FromGitHubRepoMigrationFilesLoaderConfig
-from migration_tool.settings import Settings
+from migration_tool.settings import settings
 
 PROG = 'cli'
 init_logger()
@@ -47,19 +49,7 @@ def parse_args():
         required=True,
         dest='db_name',
         help='''
-        Target name of migrated db. 
-        ''',
-    )
-    parser.add_argument(
-        "--type",
-        type=str,
-        required=True,
-        dest='db_type',
-        choices=[
-            'postgresql'
-        ],
-        help='''
-        Type of migrated db. 
+        Target id from config file. 
         ''',
     )
     parser.add_argument(
@@ -106,37 +96,46 @@ def parse_args():
     return parser.parse_args()
 
 
-BRANCH = 'master'
-REPO_OWNER = 'book-hub-umsp'
-REPO_NAME = 'book-hub-api'
-MIGRATIONS_DIR = 'migrations'
 logger = LoggerMixIn.init_logger()
+
+
+def get_runner_for_db(name: str, parser: MigrationsConfigParser) -> DBMigrationRunner:
+    target = parser.targets.get(name, None)
+
+    if target is None:
+        raise ValueError(
+            f"Given DB name not present in config {settings.CONFIG_PATH}"
+        )
+
+    source = parser.sources.get(
+        target.source,
+        None,
+    )
+
+    if source is None:
+        raise ValueError(
+            f"Given migration source not present in config {settings.CONFIG_PATH}"
+        )
+
+    loader = source.get_loader()
+    runner = target.get_runner(loader)
+
+    return runner
 
 
 def main(args):
     logger.info(f'CLI arguments: {args}')
 
     db_name = args.db_name
-    db_type = args.db_type
     from_version = args.start_version
     is_drop = args.is_drop
     to_version = args.target_version
 
-    settings = Settings(_env_file=os.environ.get('ENV_FILE', '.env.local'))
-
-    config = MigrationConfig(db_name, db_type, settings)
-
-    files_loader = FromGitHubRepoMigrationFilesLoader(FromGitHubRepoMigrationFilesLoaderConfig(
-        branch=BRANCH,
-        repo_name=REPO_NAME,
-        repo_owner=REPO_OWNER,
-        migration_files_dir=MIGRATIONS_DIR,
-        github_pat_value=settings.GH_PAT,
-    ))
-    migration_runner = PostgreSQLMigrationRunner(
-        config=config,
-        files_loader=files_loader,
+    parser = MigrationsConfigParser(
+        config_path=settings.CONFIG_PATH,
     )
+
+    migration_runner = get_runner_for_db(db_name, parser)
 
     migration_path = migration_runner.build_migration_path(
         is_drop=is_drop,
@@ -144,7 +143,9 @@ def main(args):
         to_version=to_version,
     )
 
-    migration_runner.sync(migration_path)
+    migration_runner.sync(
+        migration_path,
+    )
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 psycopg2-binary = "*"
 retry = "*"
+pyyaml = "*"
 pydantic = "*"
 pydantic-settings = "*"
 requests = "*"

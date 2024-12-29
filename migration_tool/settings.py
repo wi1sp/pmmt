@@ -1,11 +1,15 @@
-from pydantic_settings import BaseSettings
+import os
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """App settings from env file."""
+    model_config = SettingsConfigDict(
+        env_file=os.environ.get('ENV_FILE', '.env.local'),
+        extra='allow',
+    )
+    CONFIG_PATH: str
 
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_USER_PASSWORD: str
-    GH_PAT: str
+
+settings = Settings()

@@ -57,16 +57,16 @@ class PostgreSQLMigrationRunner(DBMigrationRunner):
     def target_uri(self):
         return (
             f"postgresql+psycopg2://"
-            f"{self._config.db_settings.DB_USER}:{self._config.db_settings.DB_USER_PASSWORD}@"
-            f"{self._config.db_settings.DB_HOST}:{self._config.db_settings.DB_PORT}/{self._config.db_name}"
+            f"{self._config.db_user}:{self._config.db_pass}@"
+            f"{self._config.db_host}:{self._config.db_port}/{self._config.db_name}"
         )
 
     @property
     def default_uri(self):
         return (
             f"postgresql+psycopg2://"
-            f"{self._config.db_settings.DB_USER}:{self._config.db_settings.DB_USER_PASSWORD}@"
-            f"{self._config.db_settings.DB_HOST}:{self._config.db_settings.DB_PORT}/{self.DEFAULT_DB_NAME}"
+            f"{self._config.db_user}:{self._config.db_pass}@"
+            f"{self._config.db_host}:{self._config.db_port}/{self.DEFAULT_DB_NAME}"
         )
 
     @property

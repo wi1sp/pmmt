@@ -1,4 +1,5 @@
 .idea
 .vs
 *.local
+*.local*
 *__pycache__
